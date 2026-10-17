@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prospect Duels</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Josefin+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }</script>
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <div id="vignette"></div>
+
+  <!-- ======================= HUD ======================= -->
+  <div id="hud" class="hidden">
+    <div class="plate" id="p1">
+      <div class="name"><span class="nm"></span><span class="sty"></span></div>
+      <div class="hp"><div class="lag"></div><div class="fill"></div><div class="ticks"></div></div>
+      <div class="st"><div class="fill"></div></div>
+      <div class="row"><div class="pips"></div><div class="flow"><div class="fill"></div><span>Flow</span></div></div>
+    </div>
+    <div class="plate right" id="p2">
+      <div class="name"><span class="nm"></span><span class="sty"></span></div>
+      <div class="hp"><div class="lag"></div><div class="fill"></div><div class="ticks"></div></div>
+      <div class="st"><div class="fill"></div></div>
+      <div class="row"><div class="pips"></div><div class="flow"><div class="fill"></div><span>Flow</span></div></div>
+    </div>
+
+    <div id="announce"><div class="big"></div><div class="small"></div></div>
+
+    <div id="deckhud">
+      <svg id="compass" viewBox="0 0 100 100">
+        <polygon data-s="FL" points="50,6 6,50 50,50"/>
+        <polygon data-s="FR" points="50,6 94,50 50,50"/>
+        <polygon data-s="BL" points="6,50 50,94 50,50"/>
+        <polygon data-s="BR" points="94,50 50,94 50,50"/>
+        <polygon class="outline" points="50,6 94,50 50,94 6,50"/>
+      </svg>
+      <div class="nx">
+        <div class="nx-stance"><span id="nx-stance"></span><span id="nx-chain"></span></div>
+        <div class="nx-row"><kbd>J</kbd><span id="nx-light"></span></div>
+        <div class="nx-row alt"><kbd>K</kbd><span id="nx-alt"></span></div>
+      </div>
+    </div>
+
+    <div id="keys">
+      <div><kbd>W A S D</kbd> move</div>
+      <div><kbd>J</kbd>/<kbd>LMB</kbd> attack</div>
+      <div><kbd>K</kbd>/<kbd>RMB</kbd> alternate</div>
+      <div><kbd>L</kbd>/<kbd>Shift</kbd> block</div>
+      <div><kbd>Space</kbd> dodge</div>
+      <div><kbd>E</kbd> <span class="ab">Parry</span></div>
+      <div><kbd>Q</kbd> switch side &middot; <kbd>R</kbd> front/back</div>
+      <div><kbd>F</kbd> flow state</div>
+      <div class="dim"><kbd>Tab</kbd> hide &middot; <kbd>Esc</kbd> pause</div>
+    </div>
+    <div id="floaters"></div>
+  </div>
+  <div id="toasts"></div>
+
+  <!-- ======================= SCREENS ======================= -->
+  <section class="screen" id="s-main">
+    <div class="menu-col">
+      <div class="logo">
+        <div class="logo-mask"></div>
+        <h1>Prospect</h1>
+        <div class="tag">Duels of the Masked &middot; an Absolver-inspired martial arts game</div>
+      </div>
+      <nav class="menu">
+        <button data-act="duel"><span>Duel</span><small>Face a random challenger</small></button>
+        <button data-act="deck"><span>Combat Deck</span><small>Arrange your techniques</small></button>
+        <button data-act="style"><span>Fighting Style</span><small>Choose your defensive art</small></button>
+        <button data-act="wardrobe"><span>Wardrobe</span><small>Mask and attire</small></button>
+        <button data-act="help"><span>Teachings</span><small>How to fight</small></button>
+      </nav>
+      <div id="main-stats"></div>
+    </div>
+  </section>
+
+  <section class="screen" id="s-versus">
+    <div class="vs-card">
+      <div class="eyebrow">A challenger awaits</div>
+      <div id="vs-tier" class="vs-tier"></div>
+      <h2 id="vs-name"></h2>
+      <div class="vs-grid">
+        <div><small>Style</small><span id="vs-style"></span></div>
+        <div><small>Temperament</small><span id="vs-temper"></span></div>
+        <div><small>Grounds</small><span id="vs-loc"></span></div>
+      </div>
+      <div id="vs-record" class="dim"></div>
+      <div class="btns">
+        <button class="btn primary" data-act="begin">Begin duel <kbd>Enter</kbd></button>
+        <button class="btn" data-act="menu">Retreat</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="s-result">
+    <div class="vs-card result">
+      <h2 id="res-title"></h2>
+      <div id="res-sub"></div>
+      <div id="res-record" class="dim"></div>
+      <div class="eyebrow" style="margin-top:22px">Techniques studied</div>
+      <div id="res-learn"></div>
+      <div class="btns">
+        <button class="btn primary" data-act="next">Next duel <kbd>Enter</kbd></button>
+        <button class="btn" data-act="deck">Combat deck</button>
+        <button class="btn" data-act="menu">Main menu</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="s-pause">
+    <div class="vs-card small">
+      <h2>Paused</h2>
+      <div class="btns col">
+        <button class="btn primary" data-act="resume">Resume</button>
+        <button class="btn" data-act="forfeit">Forfeit duel</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen panel-screen" id="s-style">
+    <div class="panel wide">
+      <header><h2>Fighting Style</h2><p>Your style decides your defensive ability. Choosing a style also teaches you its starting techniques.</p></header>
+      <div id="style-cards"></div>
+      <footer><button class="btn" data-act="menu">Back</button></footer>
+    </div>
+  </section>
+
+  <section class="screen panel-screen" id="s-deck">
+    <div class="panel wide deck">
+      <header><h2>Combat Deck</h2><p>Each stance holds a chain of up to three attacks and one alternate. An attack begins in one stance and ends in another; the next slot starts wherever the last one ended.</p></header>
+      <div class="deck-body">
+        <div id="deck-stances"></div>
+        <div class="deck-list">
+          <div id="deck-list-head"></div>
+          <div id="deck-moves"></div>
+        </div>
+      </div>
+      <footer><button class="btn" data-act="autodeck">Auto-build</button><button class="btn primary" data-act="menu">Done</button></footer>
+    </div>
+  </section>
+
+  <section class="screen panel-screen left" id="s-wardrobe">
+    <div class="panel narrow">
+      <header><h2>Wardrobe</h2></header>
+      <div id="ward-rows"></div>
+      <label class="spin">Turn <input type="range" id="ward-spin" min="-180" max="180" value="0"></label>
+      <footer><button class="btn" data-act="randfit">Randomize</button><button class="btn primary" data-act="menu">Done</button></footer>
+    </div>
+  </section>
+
+  <section class="screen panel-screen" id="s-help">
+    <div class="panel wide help">
+      <header><h2>Teachings</h2></header>
+      <div class="help-grid">
+        <div>
+          <h3>Stances</h3>
+          <p>You always stand in one of four stances: <b>Front</b> or <b>Back</b>, leading with your <b>Left</b> or <b>Right</b> side. The diamond at the bottom of the screen shows where you are.</p>
+          <p>Every attack starts in one stance and leaves you in another. Your combat deck sets which attacks flow from each stance. Press <kbd>Q</kbd> to switch side and <kbd>R</kbd> to switch between front and back.</p>
+          <h3>Attacking</h3>
+          <p><kbd>J</kbd> or left click throws the next attack in your chain. Keep pressing to continue the combo. <kbd>K</kbd> or right click throws your stance's <b>alternate</b> attack, usually a heavier one.</p>
+          <p>Attacks cost stamina. Landing hits gives some back. When your stamina runs out you are <b>exhausted</b>: you move slower and your guard breaks easily.</p>
+        </div>
+        <div>
+          <h3>Defending</h3>
+          <p><kbd>L</kbd> or <kbd>Shift</kbd> blocks. It drains stamina and <i>break</i> attacks punch through it. <kbd>Space</kbd> + a direction dodges. Side dodges beat <i>vertical</i> attacks but not <i>horizontal</i> ones. Back dodges beat both.</p>
+          <p><kbd>E</kbd> uses your style's ability: <b>Parry</b>, <b>Absorb</b>, <b>Avoid</b> or <b>Sway</b>.</p>
+          <h3>Learning</h3>
+          <p>You learn techniques the way the masked ones do: by surviving them. Each time you block, evade, parry or absorb an attack you don't know, you make progress on it. Once you've learned it, put it in your deck.</p>
+          <h3>Flow</h3>
+          <p>Fighting well fills your <b>Flow</b> meter. Press <kbd>F</kbd> when it's full: you attack faster, hit harder and recover stamina faster for a short time.</p>
+          <p class="dim">Gamepads work too: stick to move, X/Y attacks, RB block, A dodge, B ability, LB/LT switch stance.</p>
+        </div>
+      </div>
+      <footer><button class="btn" data-act="reset">Erase progress</button><button class="btn primary" data-act="menu">Back</button></footer>
+    </div>
+  </section>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
